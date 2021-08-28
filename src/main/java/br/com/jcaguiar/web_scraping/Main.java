@@ -1,7 +1,6 @@
 package br.com.jcaguiar.web_scraping;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -110,7 +109,7 @@ public class Main {
 		try {  
 		  String urlFinal = urlAlvo + URLEncoder.encode(searchQuery, "UTF-8");
 		  HtmlPage page = client.getPage(urlFinal);
-		  second(page);
+		  //second(page);
 		}
 		catch(Exception e){
 		  e.printStackTrace();
