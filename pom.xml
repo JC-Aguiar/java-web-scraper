@@ -24,6 +24,7 @@
 	      <scope>test</scope>
     </dependency>
     
+    <!-- HTML Unit -->
 	<dependency> 
 	   <groupId>net.sourceforge.htmlunit</groupId>
 	   <artifactId>htmlunit</artifactId> 
@@ -37,7 +38,17 @@
 		<version>1.18.20</version>
 		<scope>provided</scope>
 	</dependency>
+	
+	<!-- OpenCSV -->
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>5.4</version>
+		</dependency>
+	
   </dependencies>
+  
+  
   
   <build>
   	<plugins>

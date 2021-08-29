@@ -25,18 +25,26 @@ public class Scraper {
 	final private WebClient client = new WebClient();
 	
 	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-	/**CONSTRUCTOR 1
- * 
- * @param urlOrigin
- */
-	public Scraper(String urlOrigin) {
-		this.urlOrigin = urlOrigin;
-		this.urlQuery = "";
-		defaultSetting();
+	/**CONSTRUCTOR DEFAULT
+	 * 
+	 */
+	public Scraper() {
+		defaultStart();
 	}
 	
 	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-	/**CONSTRUCTOR 2
+	/**CONSTRUCTOR II
+	 * 
+	 * @param urlOrigin
+	 */
+	public Scraper(String urlOrigin) {
+		this.urlOrigin = urlOrigin;
+		this.urlQuery = "";
+		defaultStart();
+	}
+	
+	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	/**CONSTRUCTOR III
 	 * 
 	 * @param urlOrigin
 	 * @param urlQuery
@@ -44,26 +52,27 @@ public class Scraper {
 	public Scraper(String urlOrigin, String urlQuery) {
 		this.urlOrigin = urlOrigin;
 		this.urlQuery = urlQuery;
-		defaultSetting();
+		defaultStart();
 	}
 	
 	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	/**AFTER CONSTRUCTED
 	 * 
 	 */
-	private void defaultSetting() {
+	private void defaultStart() {
 		htmlOnly();
-		pageReady();
-		pageGo(urlStack.get(0));
+		client.addRequestHeader("Content-Type", "application/xhtml+xml");
+		pageFormatAndGo(urlOrigin, urlQuery);
 	}
 	
 	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	/**ENCODE PAGE
 	 * 
 	 */
-	private void pageReady() {
+	public void pageFormatAndGo(String urlBase, String query) {
 		try {
-			urlStack.add(urlOrigin + URLEncoder.encode(urlQuery, urlEncode));
+			String urlFinal = urlBase + URLEncoder.encode(query, urlEncode);
+			pageGo(urlFinal);
 		}
 		catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
@@ -75,9 +84,11 @@ public class Scraper {
 	 * 
 	 * @param url: String URL to try a web access 
 	 */
-	private void pageGo(String url) {
+	public void pageGo(String url) {
 		try {
 			this.page = client.getPage(url);
+			urlStack.add(url);
+			System.out.printf("LOG: Successful access to: %s \n", url);
 		}
 		catch (FailingHttpStatusCodeException e) {
 			//System.out.println("Error: server failing");
@@ -92,12 +103,17 @@ public class Scraper {
 	}
 	
 	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	public String getUrlHistory(int index) {
+		return urlStack.get(index);
+	}
+	
+	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	//WEBPAGE CONFIGURATIONS (BEFORE ACCESS)
 	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	/**JAVASCRIPT OFF
 	 * 
 	 */
-	private void noJs() {
+	public void noJs() {
 		client.getOptions().setJavaScriptEnabled(false);
 	}
 	
@@ -105,7 +121,7 @@ public class Scraper {
 	/**JAVASCRIPT ON
 	 * 
 	 */
-	private void enableJs() {
+	public void enableJs() {
 		client.getOptions().setJavaScriptEnabled(true);
 	}
 	
@@ -113,7 +129,7 @@ public class Scraper {
 	/**CSS OFF
 	 * 
 	 */
-	private void noCss() {
+	public void noCss() {
 		client.getOptions().setCssEnabled(false);
 	}
 	
@@ -121,7 +137,7 @@ public class Scraper {
 	/**CSS ON
 	 * 
 	 */
-	private void enableCsss() {
+	public void enableCsss() {
 		client.getOptions().setCssEnabled(true);
 	}
 	
@@ -129,7 +145,7 @@ public class Scraper {
 	/**DESABLE NON-HTML ELEMENTS
 	 * 
 	 */
-	private void htmlOnly() {
+	public void htmlOnly() {
 		client.getOptions().setJavaScriptEnabled(false);
 		client.getOptions().setCssEnabled(false);
 	}
@@ -145,11 +161,17 @@ public class Scraper {
 	public List<HtmlElement> getAllElementsByXPath(String elementPath) {
 		List<HtmlElement> elements = (List<HtmlElement>) page.getByXPath(elementPath);
 		try {
+			if(elements.size() == 0) {
+				throw new NullPointerException();
+			}
 			System.out.printf("LOG: Found %s total elements. \n",
 					elements.size());
+			for(HtmlElement item : elements) {
+				System.out.printf("\t > %s \n", item);
+			}
 		}
 		catch (NullPointerException e) {
-			System.out.println("LOG: No HTML element found.");
+			System.out.printf("LOG: No HTML %s element found. \n", elementPath);
 		}
 		return elements;
 	}
@@ -163,13 +185,40 @@ public class Scraper {
 	public HtmlElement getOneElementByXPath(String elementPath) {
 		HtmlElement element = (HtmlElement) page.getFirstByXPath(elementPath);
 		try {
-			System.out.printf("LOG: Founded element: \n",
+			System.out.printf("LOG: Founded element: %s \n",
 					element.asText());
 		}
 		catch (NullPointerException e) {
-			System.out.println("LOG: No HTML element found.");
+			System.out.printf("LOG: No HTML %s element found. \n", elementPath);
 		}
 		return element;
+	}
+
+
+	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	//UTILITY
+	//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	/**GET ATTRIBUTE FROM HTML TAG LIST
+	 * 
+	 * @param targetPages
+	 * @param attr
+	 * @return
+	 */
+	public List<String> getAttributeFromTag(List<HtmlElement> tagsHtml, String attr) {
+		List<String> values = new ArrayList<String>();
+		System.out.printf("LOG: Geting attribute '%s' from HTML. \n", attr);
+		for(HtmlElement tag : tagsHtml) {
+			String item = tag.getAttribute(attr); 
+			if(item != null && item != "" ) {
+				values.add(item);
+				System.out.printf("\t > %s \n", item);
+			}
+		}
+		if(values.size() == 0 || values.isEmpty()) {
+			System.out.println("LOG: No values founded. \n");
+			throw new NullPointerException();
+		}
+		return values;
 	}
 
 }
